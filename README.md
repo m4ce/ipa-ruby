@@ -15,7 +15,7 @@ gem install ipa-ruby
 
 You can optionally pass a `ca_cert` keyword argument specifying the path to the FreeIPA CA certificate. Default is /etc/ipa/ca.crt.
 ```
-require 'ipa'
+require 'ipa/client'
 ipa = IPA::Client.new(host: 'ipa.example.org')
 ```
 
