@@ -1,5 +1,6 @@
 # Ruby client library for FreeIPA JSON API
-This is a simple Ruby client library that allows to interact with the FreeIPA JSON API.
+This is a simple Ruby client library that allows to interact with the FreeIPA JSON API. It currently only supports authenticating via
+Kerberos/GSSAPI tickets.
 
 Pull requests to add additional API features are very welcome. I only implemented what I needed.
 
