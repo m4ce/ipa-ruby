@@ -17,19 +17,37 @@ module IPA
     def initialize(host: nil, ca_cert: '/etc/ipa/ca.crt')
       raise ArgumentError, 'Missing FreeIPA host' unless host
 
-      @uri = URI.parse("https://#{host}/ipa/json")
-
-      gssapi = GSSAPI::Simple.new(uri.host, 'HTTP')
-      # Initiate the security context
-      token = gssapi.init_context
+      @uri = URI.parse("https://#{host}/ipa/session/json")
 
       @http = HTTPClient.new
       @http.ssl_config.set_trust_ca(ca_cert)
-      @headers = {'referer' => "https://#{uri.host}/ipa/ui/index.html", 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => "Negotiate #{Base64.strict_encode64(token)}"}
+      @headers = {'referer' => "https://#{uri.host}/ipa/json", 'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+
+      self.login(host)
+    end
+
+    def login(host)
+      # Set the timeout to 15 minutes
+      @session_timeout = (Time.new.to_i + 900)
+
+      gssapi = GSSAPI::Simple.new(@uri.host, 'HTTP')
+      # Initiate the security context
+      token = gssapi.init_context
+
+      login_uri = URI.parse("https://#{host}/ipa/json")
+      login_request = { :method => "ping", :params => [[],{}] }
+      login_headers = {'referer' => "https://#{uri.host}/ipa/ui/index.html", 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => "Negotiate #{Base64.strict_encode64(token)}"}
+
+      self.http.post(login_uri, login_request.to_json, login_headers)
     end
 
     def api_post(method: nil, item: [], params: {})
       raise ArgumentError, 'Missing method in API request' unless method
+
+      if Time.new.to_i > @session_timeout then
+        self.login
+      end
+
       request = {}
       request[:method] = method
       request[:params] = [[item || []], params]
