@@ -34,7 +34,7 @@ module IPA
       # Initiate the security context
       token = gssapi.init_context
 
-      login_uri = URI.parse("https://#{host}/ipa/json")
+      login_uri = URI.parse("https://#{host}/ipa/session/login_kerberos")
       login_request = { :method => "ping", :params => [[],{}] }
       login_headers = {'referer' => "https://#{uri.host}/ipa/ui/index.html", 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => "Negotiate #{Base64.strict_encode64(token)}"}
 
