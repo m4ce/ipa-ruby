@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.description = 'Ruby client library for FreeIPA JSON API'
   s.email = '<matteo.cerutti@hotmail.co.uk>'
   s.files = Dir.glob('{lib}/**/*') + %w(LICENSE README.md)
-  s.require_paths = ["lib"]
+  s.require_paths = ['lib']
   s.homepage = 'https://github.com/m4ce/ipa-ruby'
   s.license = 'Apache 2.0'
   s.summary = 'Ruby client library that allows to interact with the FreeIPA JSON API'
