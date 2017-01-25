@@ -10,7 +10,9 @@ require 'base64'
 require 'gssapi'
 require 'json'
 
+# IPA
 module IPA
+  # Client
   class Client
     attr_reader :uri, :http, :headers
 
@@ -21,9 +23,9 @@ module IPA
 
       @http = HTTPClient.new
       @http.ssl_config.set_trust_ca(ca_cert)
-      @headers = {'referer' => "https://#{uri.host}/ipa/json", 'Content-Type' => 'application/json', 'Accept' => 'application/json'}
+      @headers = { 'referer' => "https://#{uri.host}/ipa/json", 'Content-Type' => 'application/json', 'Accept' => 'application/json' }
 
-      self.login(host)
+      login(host)
     end
 
     def login(host)
@@ -35,23 +37,21 @@ module IPA
       token = gssapi.init_context
 
       login_uri = URI.parse("https://#{host}/ipa/session/login_kerberos")
-      login_request = { :method => "ping", :params => [[],{}] }
-      login_headers = {'referer' => "https://#{uri.host}/ipa/ui/index.html", 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => "Negotiate #{Base64.strict_encode64(token)}"}
+      login_request = { method: 'ping', params: [[], {}] }
+      login_headers = { 'referer' => "https://#{uri.host}/ipa/ui/index.html", 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => "Negotiate #{Base64.strict_encode64(token)}" }
 
-      self.http.post(login_uri, login_request.to_json, login_headers)
+      http.post(login_uri, login_request.to_json, login_headers)
     end
 
     def api_post(method: nil, item: [], params: {})
       raise ArgumentError, 'Missing method in API request' unless method
 
-      if Time.new.to_i > @session_timeout then
-        self.login
-      end
+      login if Time.new.to_i > @session_timeout
 
       request = {}
       request[:method] = method
       request[:params] = [[item || []], params]
-      resp = self.http.post(self.uri, request.to_json, self.headers)
+      resp = http.post(uri, request.to_json, headers)
       JSON.parse(resp.body)
     end
 
@@ -63,19 +63,19 @@ module IPA
       params[:random] = random unless random.nil?
       params[:userpassword] = userpassword unless userpassword.nil?
 
-      self.api_post(method: 'host_add', item: hostname, params: params)
+      api_post(method: 'host_add', item: hostname, params: params)
     end
 
     def host_del(hostname: nil, params: {})
       raise ArgumentError, 'Hostname is required' unless hostname
 
-      self.api_post(method: 'host_del', item: hostname, params: params)
+      api_post(method: 'host_del', item: hostname, params: params)
     end
 
     def host_find(hostname: nil, all: false, params: {})
       params[:all] = all
 
-      self.api_post(method: 'host_find', item: hostname, params: params)
+      api_post(method: 'host_find', item: hostname, params: params)
     end
 
     def host_show(hostname: nil, all: false, params: {})
@@ -83,11 +83,11 @@ module IPA
 
       params[:all] = all
 
-      self.api_post(method: 'host_show', item: hostname, params: params)
+      api_post(method: 'host_show', item: hostname, params: params)
     end
 
     def host_exists?(hostname)
-      resp = self.host_show(hostname: hostname)
+      resp = host_show(hostname: hostname)
       if resp['error']
         false
       else
