@@ -35,7 +35,7 @@ module IPA
       token = gssapi.init_context
 
       login_uri = URI.parse("https://#{host}/ipa/session/login_kerberos")
-      login_request = { :method => "ping", :params => [[],{}] }
+      login_request = {:method => "ping", :params => [[], {}]}
       login_headers = {'referer' => "https://#{uri.host}/ipa/ui/index.html", 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => "Negotiate #{Base64.strict_encode64(token)}"}
 
       self.http.post(login_uri, login_request.to_json, login_headers)
@@ -53,6 +53,39 @@ module IPA
       request[:params] = [[item || []], params]
       resp = self.http.post(self.uri, request.to_json, self.headers)
       JSON.parse(resp.body)
+    end
+
+    def hostgroup_show(hostgroup: nil,all: false, params: {})
+      raise ArgumentError, 'Hostgroup is required' unless hostgroup
+
+      params[:all] = all
+
+      self.api_post(method: 'hostgroup_show', item: hostgroup, params: params)
+    end
+
+    def hostgroup_add(hostgroup: nil, description: nil, all: false, params: {})
+      raise ArgumentError, 'Hostgroup is required' unless hostgroup
+      raise ArgumentError, 'description is required' unless description
+
+      params[:all] = all
+      params[:description] = description
+
+      self.api_post(method: 'hostgroup_add', item: hostgroup, params: params)
+    end
+
+    def hostgroup_add_member(hostgroup: nil, hostnames: nil, params: {})
+      raise ArgumentError, 'Hostgroup is required' unless hostgroup
+      raise ArgumentError, 'Hostnames is required' unless hostnames
+      params[:all] = true
+
+      if hostnames.kind_of?(Array)
+        params[:host] = hostnames
+      end
+      if hostnames.kind_of?(String)
+        params[:host] = [hostnames]
+      end
+
+      self.api_post(method: 'hostgroup_add_member', item: hostgroup, params: params)
     end
 
     def host_add(hostname: nil, all: false, force: false, random: nil, userpassword: nil, params: {})
